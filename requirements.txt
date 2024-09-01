@@ -1,0 +1,5 @@
+pyaudio
+requests
+pydub
+beautifulsoup4
+PyQt5
