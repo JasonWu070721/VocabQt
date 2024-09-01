@@ -10,19 +10,6 @@ import sqlite3
 import re
 
 
-conn = sqlite3.connect("db/words.db")
-cursor = conn.cursor()
-
-cursor.execute(
-    """
-    CREATE TABLE IF NOT EXISTS words (
-    id INTEGER PRIMARY KEY,
-    word TEXT,
-    cht TEXT,
-    mp3_url TEXT
-)
-"""
-)
 
 
 headers = {
@@ -112,6 +99,27 @@ def load_quizlet(filename):
 
 
 if __name__ == "__main__":
+
+    if os.path.isdir("./db") == False:
+        os.mkdir("./db")
+
+
+    if os.path.isdir("./audio") == False:
+        os.mkdir("./audio")
+
+    conn = sqlite3.connect("db/words.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS words (
+        id INTEGER PRIMARY KEY,
+        word TEXT,
+        cht TEXT,
+        mp3_url TEXT
+    )
+    """
+    )
 
     while True:
 
