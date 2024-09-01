@@ -10,8 +10,6 @@ import sqlite3
 import re
 
 
-
-
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
 }
@@ -23,11 +21,20 @@ def get_men_mp3_url(word):
 
 
 def get_dictionary_response(word):
-    response = requests.get(
-        "https://tw.dictionary.search.yahoo.com/search?p=" + word,
-        headers=headers,
-        verify=None,
-    )
+
+    try:
+        response = requests.get(
+            "https://tw.dictionary.search.yahoo.com/search?p=" + word,
+            headers=headers,
+            verify=None,
+            timeout=5,
+        )
+    except requests.exceptions.Timeout:
+        print("Request timed out.")
+        return None
+    except requests.exceptions.ConnectionError as e:
+        print(f"Connection error occurred: {e}")
+        return None
 
     return response
 
@@ -67,7 +74,14 @@ def save_mp3(mp3_url):
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
     }
 
-    response = requests.get(mp3_url, headers=headers, verify=None)
+    try:
+        response = requests.get(mp3_url, headers=headers, verify=None)
+    except requests.exceptions.Timeout:
+        print("Request timed out.")
+        return False
+    except requests.exceptions.ConnectionError as e:
+        print(f"Connection error occurred: {e}")
+        return False
 
     if response.status_code != 200:
         print("Failed to download the MP3 file.")
@@ -75,6 +89,8 @@ def save_mp3(mp3_url):
 
     with open("audio/" + word + ".mp3", "wb") as file:
         file.write(response.content)
+
+    return True
 
 
 def check_mp3_exists(word):
@@ -102,7 +118,6 @@ if __name__ == "__main__":
 
     if os.path.isdir("./db") == False:
         os.mkdir("./db")
-
 
     if os.path.isdir("./audio") == False:
         os.mkdir("./audio")
@@ -152,7 +167,11 @@ if __name__ == "__main__":
             else:
                 response = get_dictionary_response(word)
                 cht = get_tradionnal_chinese(response)
-                print(word + " ," + cht)
+                print(str(word) + " ," + str(cht))
+
+                if response == None:
+                    print("No response.")
+                    continue
 
                 mp3_url = get_mp3_url_html(response)
 
