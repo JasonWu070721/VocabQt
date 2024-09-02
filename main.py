@@ -56,6 +56,9 @@ class WordTableApp(QMainWindow):
         # Hide the ID column
         self.table_widget.setColumnHidden(0, True)
 
+        # Hide the MP3 URL column
+        self.table_widget.setColumnHidden(3, True)
+
         self.load_data()
 
         # Input fields and buttons for word list tab
@@ -100,6 +103,9 @@ class WordTableApp(QMainWindow):
 
         # Hide the ID column
         self.random_table_widget.setColumnHidden(0, True)
+
+        # Hide the MP3 URL column
+        self.random_table_widget.setColumnHidden(3, True)
 
         load_random_button = QPushButton("Load Random Words", self)
         load_random_button.clicked.connect(self.load_random_words)
