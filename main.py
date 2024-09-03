@@ -53,6 +53,10 @@ class WordTableApp(QMainWindow):
         )
         self.word_list_layout.addWidget(self.table_widget)
 
+        # Set the column widths
+        self.table_widget.setColumnWidth(1, 150)
+        self.table_widget.setColumnWidth(2, 500)
+
         # Hide the ID column
         self.table_widget.setColumnHidden(0, True)
 
@@ -100,6 +104,10 @@ class WordTableApp(QMainWindow):
             ["ID", "Word", "CHT", "MP3 URL", "Play", "Remove"]
         )
         self.random_words_layout.addWidget(self.random_table_widget)
+
+        # Set the column widths
+        self.random_table_widget.setColumnWidth(1, 150)
+        self.random_table_widget.setColumnWidth(2, 500)
 
         # Hide the ID column
         self.random_table_widget.setColumnHidden(0, True)
@@ -149,10 +157,21 @@ class WordTableApp(QMainWindow):
 
         self.table_widget.setRowCount(len(records))
         for i, (id, word, cht, mp3_url) in enumerate(records):
-            self.table_widget.setItem(i, 0, QTableWidgetItem(str(id)))
-            self.table_widget.setItem(i, 1, QTableWidgetItem(word))
-            self.table_widget.setItem(i, 2, QTableWidgetItem(cht))
-            self.table_widget.setItem(i, 3, QTableWidgetItem(mp3_url))
+
+            id_item = QTableWidgetItem(str(id))
+            word_item = QTableWidgetItem(word)
+            cht_item = QTableWidgetItem(cht)
+            mp3_url_item = QTableWidgetItem(mp3_url)
+
+            id_item.setToolTip(f"{id}")
+            word_item.setToolTip(f"{word}")
+            cht_item.setToolTip(f"{cht}")
+            mp3_url_item.setToolTip(f"{mp3_url}")
+
+            self.table_widget.setItem(i, 0, id_item)
+            self.table_widget.setItem(i, 1, word_item)
+            self.table_widget.setItem(i, 2, cht_item)
+            self.table_widget.setItem(i, 3, mp3_url_item)
             play_button = QPushButton("Play")
             play_button.clicked.connect(lambda _, w=word: self.play_sound(w))
             self.table_widget.setCellWidget(i, 4, play_button)
@@ -217,10 +236,22 @@ class WordTableApp(QMainWindow):
         self.random_words = []
 
         for i, (id, word, cht, mp3_url) in enumerate(records):
-            self.random_table_widget.setItem(i, 0, QTableWidgetItem(str(id)))
-            self.random_table_widget.setItem(i, 1, QTableWidgetItem(word))
-            self.random_table_widget.setItem(i, 2, QTableWidgetItem(cht))
-            self.random_table_widget.setItem(i, 3, QTableWidgetItem(mp3_url))
+
+            id_item = QTableWidgetItem(str(id))
+            word_item = QTableWidgetItem(word)
+            cht_item = QTableWidgetItem(cht)
+            mp3_url_item = QTableWidgetItem(mp3_url)
+
+            id_item.setToolTip(f"{id}")
+            word_item.setToolTip(f"{word}")
+            cht_item.setToolTip(f"{cht}")
+            mp3_url_item.setToolTip(f"{mp3_url}")
+
+            self.random_table_widget.setItem(i, 0, id_item)
+            self.random_table_widget.setItem(i, 1, word_item)
+            self.random_table_widget.setItem(i, 2, cht_item)
+            self.random_table_widget.setItem(i, 3, mp3_url_item)
+
             play_button = QPushButton("Play")
             play_button.clicked.connect(lambda _, w=word: self.play_sound(w))
             self.random_table_widget.setCellWidget(i, 4, play_button)
