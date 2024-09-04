@@ -136,62 +136,58 @@ if __name__ == "__main__":
     """
     )
 
-    while True:
+    all_words = load_quizlet("quizlet_level4.txt")
 
-        all_words = load_quizlet("quizlet_level4.txt")
+    words_len = len(all_words)
 
-        words_len = len(all_words)
+    random_index = random.randint(0, len(all_words) - 1)
+    # random_index = 0
 
-        random_index = random.randint(0, len(all_words) - 1)
-        # random_index = 0
+    print(words_len)
+    print(random_index)
 
-        print(words_len)
-        print(random_index)
+    for word_index, all_word in enumerate(all_words):
 
-        for word_index, all_word in enumerate(all_words):
+        word_index = (word_index + random_index) % words_len
+        word = all_words[word_index][0]
 
-            word_index = (word_index + random_index) % words_len
-            word = all_words[word_index][0]
+        cursor.execute("SELECT word, cht, mp3_url FROM words WHERE word = ?", (word,))
+
+        result = cursor.fetchone()
+
+        if result:
+            word, cht, mp3_url = result
+            print(f"The word '{word}' exists in the table.")
+            print(f"Data: word={word}, cht={cht}, mp3_url={mp3_url}")
+
+        else:
+            response = get_dictionary_response(word)
+            cht = get_tradionnal_chinese(response)
+            print(str(word) + " ," + str(cht))
+
+            if response == None:
+                print("No response.")
+                continue
+
+            mp3_url = get_mp3_url_html(response)
+
+            if mp3_url is None:
+                print("No MP3 URL found.")
+                continue
+
+            if not check_mp3_exists(word):
+                save_mp3(mp3_url)
 
             cursor.execute(
-                "SELECT word, cht, mp3_url FROM words WHERE word = ?", (word,)
+                """
+                    INSERT INTO words (word, cht, mp3_url)
+                    VALUES
+                        (?, ?, ?)
+                """,
+                (word, cht, mp3_url),
             )
 
-            result = cursor.fetchone()
-
-            if result:
-                word, cht, mp3_url = result
-                print(f"The word '{word}' exists in the table.")
-                print(f"Data: word={word}, cht={cht}, mp3_url={mp3_url}")
-
-            else:
-                response = get_dictionary_response(word)
-                cht = get_tradionnal_chinese(response)
-                print(str(word) + " ," + str(cht))
-
-                if response == None:
-                    print("No response.")
-                    continue
-
-                mp3_url = get_mp3_url_html(response)
-
-                if mp3_url is None:
-                    print("No MP3 URL found.")
-                    continue
-
-                if not check_mp3_exists(word):
-                    save_mp3(mp3_url)
-
-                cursor.execute(
-                    """
-                        INSERT INTO words (word, cht, mp3_url)
-                        VALUES
-                            (?, ?, ?)
-                    """,
-                    (word, cht, mp3_url),
-                )
-
-                conn.commit()
+            conn.commit()
 
             if check_mp3_exists(word):
                 play_mp3(word)
