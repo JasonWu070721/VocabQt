@@ -1,14 +1,11 @@
 import requests
 from pydub import AudioSegment
 from pydub.playback import play
-
 from bs4 import BeautifulSoup
 import os
 import random
-
 import sqlite3
 import re
-
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"

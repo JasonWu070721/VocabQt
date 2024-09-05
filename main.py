@@ -1,6 +1,5 @@
 import sys
 import sqlite3
-import random
 import os
 from PyQt5.QtWidgets import (
     QApplication,
@@ -271,6 +270,8 @@ class WordTableApp(QMainWindow):
             records = cursor.fetchall()
 
             for id, word, cht, mp3_url in records:
+                self.random_words.append(word)
+
                 row_position = self.random_table_widget.rowCount()
                 self.random_table_widget.insertRow(row_position)
                 self.random_table_widget.setItem(
@@ -306,8 +307,12 @@ class WordTableApp(QMainWindow):
 
     def remove_random_row(self, id):
         for row in range(self.random_table_widget.rowCount()):
-            item = self.random_table_widget.item(row, 0)
-            if item is not None and int(item.text()) == id:
+            random_id = self.random_table_widget.item(row, 0)
+
+            if random_id is not None and int(random_id.text()) == id:
+                select_word = self.random_table_widget.item(row, 1)
+                self.random_words.remove(select_word.text())
+
                 # Remove rows from the random word table
                 self.random_table_widget.removeRow(row)
                 break
