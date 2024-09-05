@@ -176,7 +176,7 @@ class WordTableApp(QMainWindow):
             play_button.clicked.connect(lambda _, w=word: self.play_sound(w))
             self.table_widget.setCellWidget(i, 4, play_button)
             remove_button = QPushButton("Remove")
-            remove_button.clicked.connect(lambda _, row=i: self.remove_row(row))
+            remove_button.clicked.connect(lambda _, _id=id: self.remove_row(_id))
             self.table_widget.setCellWidget(i, 5, remove_button)
 
     def add_entry(self):
@@ -256,7 +256,7 @@ class WordTableApp(QMainWindow):
             play_button.clicked.connect(lambda _, w=word: self.play_sound(w))
             self.random_table_widget.setCellWidget(i, 4, play_button)
             remove_button = QPushButton("Remove")
-            remove_button.clicked.connect(lambda _, row=i: self.remove_random_row(row))
+            remove_button.clicked.connect(lambda _, _id=id: self.remove_random_row(_id))
             self.random_table_widget.setCellWidget(i, 5, remove_button)
             self.random_words.append(word)
 
@@ -288,21 +288,29 @@ class WordTableApp(QMainWindow):
                 self.random_table_widget.setCellWidget(row_position, 4, play_button)
                 remove_button = QPushButton("Remove")
                 remove_button.clicked.connect(
-                    lambda _, row=row_position: self.remove_random_row(row)
+                    lambda _, _id=id: self.remove_random_row(_id)
                 )
                 self.random_table_widget.setCellWidget(row_position, 5, remove_button)
 
-    def remove_row(self, row):
+    def remove_row(self, id):
         # Remove the row and delete it from the database
-        id = int(self.table_widget.item(row, 0).text())
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM words WHERE id = ?", (id,))
         self.conn.commit()
-        self.table_widget.removeRow(row)
 
-    def remove_random_row(self, row):
-        # Remove rows from the random word table
-        self.random_table_widget.removeRow(row)
+        for row in range(self.table_widget.rowCount()):
+            item = self.table_widget.item(row, 0)
+            if item is not None and int(item.text()) == id:
+                self.table_widget.removeRow(row)
+                break
+
+    def remove_random_row(self, id):
+        for row in range(self.random_table_widget.rowCount()):
+            item = self.random_table_widget.item(row, 0)
+            if item is not None and int(item.text()) == id:
+                # Remove rows from the random word table
+                self.random_table_widget.removeRow(row)
+                break
 
     def play_sound(self, word):
         mp3_path = f"audio/{word}.mp3"
