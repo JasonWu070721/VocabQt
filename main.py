@@ -1,5 +1,4 @@
 import sys
-import sqlite3
 import os
 from PyQt5.QtWidgets import (
     QApplication,
@@ -16,6 +15,15 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtCore import QUrl, QTimer
 from PyQt5.QtGui import QColor
+from controller.word import (
+    Word,
+    add_word,
+    get_all_words,
+    get_random_words,
+    add_word,
+    update_word,
+    delete_word,
+)
 
 
 class WordTableApp(QMainWindow):
@@ -24,8 +32,7 @@ class WordTableApp(QMainWindow):
         self.setWindowTitle("Word Table")
         self.setGeometry(100, 100, 1024, 640)
 
-        self.conn = sqlite3.connect("db/words.db")
-        self.create_table()
+        self.word_db = Word()
 
         # Initialize media player and timer
         self.player = QMediaPlayer()
@@ -138,22 +145,9 @@ class WordTableApp(QMainWindow):
 
         self.load_random_words()
 
-    def create_table(self):
-        cursor = self.conn.cursor()
-        cursor.execute(
-            """CREATE TABLE IF NOT EXISTS words
-                          (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                          word TEXT,
-                          cht TEXT,
-                          mp3_url TEXT)"""
-        )
-        self.conn.commit()
-
     def load_data(self):
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT id, word, cht, mp3_url FROM words")
-        records = cursor.fetchall()
 
+        records = get_all_words()
         self.table_widget.setRowCount(len(records))
         for i, (id, word, cht, mp3_url) in enumerate(records):
 
@@ -183,12 +177,7 @@ class WordTableApp(QMainWindow):
         cht = self.cht_input.text()
         mp3_url = self.mp3_url_input.text()
 
-        cursor = self.conn.cursor()
-        cursor.execute(
-            "INSERT INTO words (word, cht, mp3_url) VALUES (?, ?, ?)",
-            (word, cht, mp3_url),
-        )
-        self.conn.commit()
+        add_word(word, cht, mp3_url)
 
         self.load_data()
 
@@ -197,16 +186,12 @@ class WordTableApp(QMainWindow):
         if current_row < 0:
             return
 
+        id = int(self.table_widget.item(current_row, 0).text())
         word = self.word_input.text()
         cht = self.cht_input.text()
         mp3_url = self.mp3_url_input.text()
 
-        cursor = self.conn.cursor()
-        cursor.execute(
-            "UPDATE words SET word = ?, cht = ?, mp3_url = ? WHERE id = ?",
-            (word, cht, mp3_url, int(self.table_widget.item(current_row, 0).text())),
-        )
-        self.conn.commit()
+        update_word(id, word, cht, mp3_url)
 
         self.load_data()
 
@@ -215,21 +200,14 @@ class WordTableApp(QMainWindow):
         if current_row < 0:
             return
 
-        cursor = self.conn.cursor()
-        cursor.execute(
-            "DELETE FROM words WHERE id = ?",
-            (int(self.table_widget.item(current_row, 0).text()),),
-        )
-        self.conn.commit()
+        id = int(self.table_widget.item(current_row, 0).text())
+        delete_word(id)
 
         self.load_data()
 
     def load_random_words(self):
-        cursor = self.conn.cursor()
-        cursor.execute(
-            "SELECT id, word, cht, mp3_url FROM words ORDER BY RANDOM() LIMIT 10"
-        )
-        records = cursor.fetchall()
+
+        records = get_random_words()
 
         self.random_table_widget.setRowCount(len(records))
         self.random_words = []
@@ -263,11 +241,8 @@ class WordTableApp(QMainWindow):
         # If the number of words in the table is less than 10, then add random words to make up the difference
         current_row_count = self.random_table_widget.rowCount()
         if current_row_count < 10:
-            cursor = self.conn.cursor()
-            cursor.execute(
-                f"SELECT id, word, cht, mp3_url FROM words ORDER BY RANDOM() LIMIT {10 - current_row_count}"
-            )
-            records = cursor.fetchall()
+
+            records = get_random_words(10 - current_row_count)
 
             for id, word, cht, mp3_url in records:
                 self.random_words.append(word)
@@ -294,10 +269,8 @@ class WordTableApp(QMainWindow):
                 self.random_table_widget.setCellWidget(row_position, 5, remove_button)
 
     def remove_row(self, id):
-        # Remove the row and delete it from the database
-        cursor = self.conn.cursor()
-        cursor.execute("DELETE FROM words WHERE id = ?", (id,))
-        self.conn.commit()
+
+        delete_word(id)
 
         for row in range(self.table_widget.rowCount()):
             item = self.table_widget.item(row, 0)
@@ -366,6 +339,7 @@ class WordTableApp(QMainWindow):
 
 
 if __name__ == "__main__":
+
     app = QApplication(sys.argv)
     window = WordTableApp()
     window.show()

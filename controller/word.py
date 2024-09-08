@@ -1,0 +1,68 @@
+from sqlalchemy import create_engine
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
+import datetime
+
+Base = declarative_base()
+
+
+class Word(Base):
+    __tablename__ = "words"
+    id = Column(Integer, primary_key=True)
+    word = Column(String)
+    cht = Column(String)
+    mp3_url = Column(String)
+
+
+engine = create_engine("sqlite:///db/words.db", echo=True)
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+def add_word(word, cht, mp3_url):
+    new_word = Word(word=word, cht=cht, mp3_url=mp3_url)
+    session.add(new_word)
+    session.commit()
+    return new_word
+
+
+def update_word(word_id, new_word, new_cht, new_mp3_url):
+    word_to_update = session.query(Word).filter_by(id=word_id).first()
+
+    if word_to_update:
+        word_to_update.word = new_word
+        word_to_update.cht = new_cht
+        word_to_update.mp3_url = new_mp3_url
+        session.commit()
+        return word_to_update
+    return None
+
+
+def delete_word(word_id):
+    word_to_delete = session.query(Word).filter_by(id=word_id).first()
+    if word_to_delete:
+        session.delete(word_to_delete)
+        session.commit()
+        return True
+    return False
+
+
+def get_all_words():
+    words = session.query(Word).all()
+    word_list = [[word.id, word.word, word.cht, word.mp3_url] for word in words]
+
+    return word_list
+
+
+def get_random_words(random_num=10):
+    sql_query = text(
+        f"SELECT id, word, cht, mp3_url FROM words ORDER BY RANDOM() LIMIT {random_num}"
+    )
+    result = session.execute(sql_query)
+
+    words = result.fetchall()
+
+    return words
