@@ -4,5 +4,8 @@ __pycache__/
 
 db/
 audio/
+config/setting.yaml
 .conda/
 quizlet_level4.txt
+quizlet_level5.txt
+quizlet_level6.txt

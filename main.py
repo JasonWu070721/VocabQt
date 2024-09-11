@@ -1,5 +1,6 @@
 import sys
 import os
+import yaml
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -11,9 +12,13 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QHBoxLayout,
     QTabWidget,
+    QCheckBox,
+    QComboBox,
 )
+
+
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtCore import QUrl, QTimer
+from PyQt5.QtCore import QUrl, QTimer, Qt
 from PyQt5.QtGui import QColor
 from controller.word import (
     Word,
@@ -26,9 +31,19 @@ from controller.word import (
 )
 
 
+config_file = "config/setting.yaml"
+
+
 class WordTableApp(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.random_word_count = 10
+        self.auto_refill = True
+
+        self.init_ui()
+        self.load_config()
+
+    def init_ui(self):
         self.setWindowTitle("Word Table")
         self.setGeometry(100, 100, 1024, 640)
 
@@ -102,6 +117,17 @@ class WordTableApp(QMainWindow):
         self.random_words_layout = QVBoxLayout()
         self.random_words_tab.setLayout(self.random_words_layout)
 
+        # Dropdown menu
+        self.word_count_combo = QComboBox(self)
+        self.word_count_combo.addItems(["10", "20", "30", "50"])
+        self.word_count_combo.currentIndexChanged.connect(self.word_count_changed)
+        self.random_words_layout.addWidget(self.word_count_combo)
+
+        # Checkbox
+        self.auto_refill_checkbox = QCheckBox("Auto Refill", self)
+        self.auto_refill_checkbox.stateChanged.connect(self.auto_refill_toggled)
+        self.random_words_layout.addWidget(self.auto_refill_checkbox)
+
         self.random_table_widget = QTableWidget()
         self.random_table_widget.setColumnCount(
             6
@@ -144,6 +170,51 @@ class WordTableApp(QMainWindow):
         self.tab_widget.addTab(self.random_words_tab, "Random Words")
 
         self.load_random_words()
+
+    def load_config(self):
+        if not os.path.exists("config"):
+            return None
+
+        with open(config_file, "r") as file:
+            configuration = yaml.safe_load(file)
+            if "setting" in configuration:
+                if "random_word_count" in configuration["setting"]:
+                    self.word_count_combo.setCurrentText(
+                        str(configuration["setting"]["random_word_count"])
+                    )
+
+                if "auto_refill" in configuration["setting"]:
+                    self.auto_refill_checkbox.setChecked(
+                        configuration["setting"]["auto_refill"]
+                    )
+
+    def word_count_changed(self, index):
+        self.random_word_count = int(self.word_count_combo.currentText())
+        self.save_config()
+        # Handle event for changing word count, e.g., reload table with selected count
+        self.load_random_words(self.random_word_count)
+
+    def auto_refill_toggled(self, state):
+        if state == Qt.Checked:
+            # Enable auto-refill functionality
+            self.auto_refill = True
+        else:
+            # Disable auto-refill functionality
+            self.auto_refill = False
+        self.save_config()
+
+    def save_config(self):
+
+        config = {
+            "app": {"name": "VocabQt", "version": 1.0, "debug": True},
+            "setting": {
+                "auto_refill": self.auto_refill,
+                "random_word_count": self.random_word_count,
+            },
+        }
+
+        with open(config_file, "w") as file:
+            yaml.dump(config, file, default_flow_style=False)
 
     def load_data(self):
 
@@ -205,9 +276,9 @@ class WordTableApp(QMainWindow):
 
         self.load_data()
 
-    def load_random_words(self):
+    def load_random_words(self, random_num=10):
 
-        records = get_random_words()
+        records = get_random_words(random_num)
 
         self.random_table_widget.setRowCount(len(records))
         self.random_words = []
@@ -240,9 +311,9 @@ class WordTableApp(QMainWindow):
     def refill_random_words(self):
         # If the number of words in the table is less than 10, then add random words to make up the difference
         current_row_count = self.random_table_widget.rowCount()
-        if current_row_count < 10:
+        if current_row_count < self.random_word_count:
 
-            records = get_random_words(10 - current_row_count)
+            records = get_random_words(self.random_word_count - current_row_count)
 
             for id, word, cht, mp3_url in records:
                 self.random_words.append(word)
@@ -289,6 +360,9 @@ class WordTableApp(QMainWindow):
                 # Remove rows from the random word table
                 self.random_table_widget.removeRow(row)
                 break
+
+        if self.auto_refill:
+            self.refill_random_words()
 
     def play_sound(self, word):
         mp3_path = f"audio/{word}.mp3"
@@ -338,7 +412,31 @@ class WordTableApp(QMainWindow):
                 self.current_word_index = 0  # Loop playback
 
 
+def init_config():
+
+    if not os.path.exists("config"):
+        os.makedirs("config")
+
+    check_file = os.path.exists(config_file)
+
+    if check_file:
+        return
+
+    config = {
+        "app": {"name": "VocabQt", "version": 1.0, "debug": True},
+        "setting": {
+            "auto_refill": True,
+            "random_word_count": 10,
+        },
+    }
+
+    with open(config_file, "w") as file:
+        yaml.dump(config, file, default_flow_style=False)
+
+
 if __name__ == "__main__":
+
+    init_config()
 
     app = QApplication(sys.argv)
     window = WordTableApp()

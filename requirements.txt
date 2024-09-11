@@ -4,3 +4,4 @@ pydub
 beautifulsoup4
 PyQt5
 SQLAlchemy
+pyyaml
