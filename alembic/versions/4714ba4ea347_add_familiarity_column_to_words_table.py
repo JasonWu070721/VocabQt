@@ -10,7 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from utils.checks import column_exists
 
 # revision identifiers, used by Alembic.
 revision: str = "4714ba4ea347"
@@ -20,10 +20,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "words",
-        sa.Column("familiarity", sa.Integer(), nullable=False, server_default="0"),
-    )
+    if not column_exists("words", "familiarity"):
+        op.add_column(
+            "words",
+            sa.Column("familiarity", sa.Integer(), nullable=False, server_default="0"),
+        )
 
 
 def downgrade() -> None:

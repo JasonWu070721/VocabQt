@@ -24,7 +24,7 @@ def upgrade() -> None:
     bind = op.get_bind()
     inspector = Inspector.from_engine(bind)
 
-    if not inspector.has_table("user_words"):
+    if not inspector.has_table("words"):
         op.create_table(
             "words",
             sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),

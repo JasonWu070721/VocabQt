@@ -10,6 +10,8 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
+from utils.checks import column_exists
 
 
 # revision identifiers, used by Alembic.
@@ -20,18 +22,20 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "words",
-        sa.Column("created_at", sa.DateTime, nullable=True),
-    )
-    op.add_column(
-        "words",
-        sa.Column(
-            "updated_at",
-            sa.DateTime,
-            nullable=True,
-        ),
-    )
+    if not column_exists("words", "created_at"):
+        op.add_column(
+            "words",
+            sa.Column("created_at", sa.DateTime, nullable=True),
+        )
+    if not column_exists("words", "updated_at"):
+        op.add_column(
+            "words",
+            sa.Column(
+                "updated_at",
+                sa.DateTime,
+                nullable=True,
+            ),
+        )
 
     op.execute("UPDATE words SET created_at = CURRENT_TIMESTAMP")
     op.execute("UPDATE words SET updated_at = CURRENT_TIMESTAMP")
