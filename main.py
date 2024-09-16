@@ -192,7 +192,7 @@ class WordTableApp(QMainWindow):
         self.random_word_count = int(self.word_count_combo.currentText())
         self.save_config()
         # Handle event for changing word count, e.g., reload table with selected count
-        self.load_random_words(self.random_word_count)
+        self.load_random_words()
 
     def auto_refill_toggled(self, state):
         if state == Qt.Checked:
@@ -276,9 +276,9 @@ class WordTableApp(QMainWindow):
 
         self.load_data()
 
-    def load_random_words(self, random_num=10):
+    def load_random_words(self):
 
-        records = get_random_words(random_num)
+        records = get_random_words(self.random_word_count)
 
         self.random_table_widget.setRowCount(len(records))
         self.random_words = []
