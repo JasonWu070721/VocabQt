@@ -11,9 +11,16 @@ Base = declarative_base()
 class Word(Base):
     __tablename__ = "words"
     id = Column(Integer, primary_key=True)
-    word = Column(String)
-    cht = Column(String)
-    mp3_url = Column(String)
+    word = Column(String, nullable=False)
+    cht = Column(String, nullable=False)
+    mp3_url = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.now, nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=datetime.datetime.now,
+        onupdate=datetime.datetime.now,
+        nullable=False,
+    )
 
 
 engine = create_engine("sqlite:///db/words.db", echo=True)
@@ -36,6 +43,7 @@ def update_word(word_id, new_word, new_cht, new_mp3_url):
         word_to_update.word = new_word
         word_to_update.cht = new_cht
         word_to_update.mp3_url = new_mp3_url
+        word_to_update.updated_at = datetime.datetime.now()
         session.commit()
         return word_to_update
     return None
