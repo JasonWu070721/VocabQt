@@ -81,10 +81,16 @@ def get_all_words():
 
 def get_random_words(random_num=10):
     sql_query = text(
-        f"SELECT id, word, cht, mp3_url FROM words ORDER BY RANDOM() LIMIT {random_num}"
+        f"SELECT id, word, cht, mp3_url, familiarity FROM words ORDER BY RANDOM()"
     )
     result = session.execute(sql_query)
 
     words = result.fetchall()
 
-    return words
+    # Sort the words by familiarity after fetching
+    words_sorted_by_familiarity = sorted(words, key=lambda x: x[4])
+
+    if random_num > len(words_sorted_by_familiarity):
+        random_num = len(words_sorted_by_familiarity)
+
+    return words_sorted_by_familiarity[:random_num]

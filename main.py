@@ -284,7 +284,7 @@ class WordTableApp(QMainWindow):
         self.random_table_widget.setRowCount(len(records))
         self.random_words = []
 
-        for i, (id, word, cht, mp3_url) in enumerate(records):
+        for i, (id, word, cht, mp3_url, _) in enumerate(records):
 
             id_item = QTableWidgetItem(str(id))
             word_item = QTableWidgetItem(word)
@@ -316,7 +316,7 @@ class WordTableApp(QMainWindow):
 
             records = get_random_words(self.random_word_count - current_row_count)
 
-            for id, word, cht, mp3_url in records:
+            for id, word, cht, mp3_url, _ in records:
                 self.random_words.append(word)
 
                 row_position = self.random_table_widget.rowCount()
