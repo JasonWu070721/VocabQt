@@ -28,6 +28,7 @@ from controller.word import (
     add_word,
     update_word,
     delete_word,
+    increase_familiarity,
 )
 
 
@@ -357,6 +358,7 @@ class WordTableApp(QMainWindow):
                 select_word = self.random_table_widget.item(row, 1)
                 self.random_words.remove(select_word.text())
 
+                increase_familiarity(int(id))
                 # Remove rows from the random word table
                 self.random_table_widget.removeRow(row)
                 break

@@ -14,6 +14,7 @@ class Word(Base):
     word = Column(String, nullable=False)
     cht = Column(String, nullable=False)
     mp3_url = Column(String, nullable=False)
+    familiarity = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.datetime.now, nullable=False)
     updated_at = Column(
         DateTime,
@@ -34,6 +35,19 @@ def add_word(word, cht, mp3_url):
     session.add(new_word)
     session.commit()
     return new_word
+
+
+def increase_familiarity(word_id):
+    if type(word_id) is not int or word_id < 0:
+        return False
+
+    word = session.query(Word).filter_by(id=word_id).first()
+
+    if word:
+        word.familiarity = (word.familiarity or 0) + 1
+        session.commit()
+
+    return True
 
 
 def update_word(word_id, new_word, new_cht, new_mp3_url):
