@@ -31,8 +31,7 @@ from controller.word import (
     increase_familiarity,
 )
 
-
-config_file = "config/setting.yaml"
+import utils.config as config
 
 
 class WordTableApp(QMainWindow):
@@ -84,6 +83,8 @@ class WordTableApp(QMainWindow):
 
         # Hide the MP3 URL column
         self.table_widget.setColumnHidden(3, True)
+
+        self.table_widget.cellClicked.connect(self.on_table_row_clicked)
 
         self.load_data()
 
@@ -148,6 +149,8 @@ class WordTableApp(QMainWindow):
         # Hide the MP3 URL column
         self.random_table_widget.setColumnHidden(3, True)
 
+        self.random_table_widget.cellClicked.connect(self.on_random_table_row_clicked)
+
         load_random_button = QPushButton("Load Random Words", self)
         load_random_button.clicked.connect(self.load_random_words)
         self.random_words_layout.addWidget(load_random_button)
@@ -172,11 +175,23 @@ class WordTableApp(QMainWindow):
 
         self.load_random_words()
 
+    def on_table_row_clicked(self, row, _):
+
+        word = self.table_widget.item(row, 1).text()
+        if word:
+            self.play_sound(word)
+
+    def on_random_table_row_clicked(self, row, _):
+
+        word = self.random_table_widget.item(row, 1).text()
+        if word:
+            self.play_sound(word)
+
     def load_config(self):
         if not os.path.exists("config"):
             return None
 
-        with open(config_file, "r") as file:
+        with open(config.config_file, "r") as file:
             configuration = yaml.safe_load(file)
             if "setting" in configuration:
                 if "random_word_count" in configuration["setting"]:
@@ -189,7 +204,7 @@ class WordTableApp(QMainWindow):
                         configuration["setting"]["auto_refill"]
                     )
 
-    def word_count_changed(self, index):
+    def word_count_changed(self):
         self.random_word_count = int(self.word_count_combo.currentText())
         self.save_config()
         # Handle event for changing word count, e.g., reload table with selected count
@@ -206,7 +221,7 @@ class WordTableApp(QMainWindow):
 
     def save_config(self):
 
-        config = {
+        config_data = {
             "app": {"name": "VocabQt", "version": 1.0, "debug": True},
             "setting": {
                 "auto_refill": self.auto_refill,
@@ -214,8 +229,8 @@ class WordTableApp(QMainWindow):
             },
         }
 
-        with open(config_file, "w") as file:
-            yaml.dump(config, file, default_flow_style=False)
+        with open(config.config_file, "w") as file:
+            yaml.dump(config_data, file, default_flow_style=False)
 
     def load_data(self):
 
@@ -414,31 +429,9 @@ class WordTableApp(QMainWindow):
                 self.current_word_index = 0  # Loop playback
 
 
-def init_config():
-
-    if not os.path.exists("config"):
-        os.makedirs("config")
-
-    check_file = os.path.exists(config_file)
-
-    if check_file:
-        return
-
-    config = {
-        "app": {"name": "VocabQt", "version": 1.0, "debug": True},
-        "setting": {
-            "auto_refill": True,
-            "random_word_count": 10,
-        },
-    }
-
-    with open(config_file, "w") as file:
-        yaml.dump(config, file, default_flow_style=False)
-
-
 if __name__ == "__main__":
 
-    init_config()
+    config.init_config()
 
     app = QApplication(sys.argv)
     window = WordTableApp()
