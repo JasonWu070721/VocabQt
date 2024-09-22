@@ -14,6 +14,7 @@ class Word(Base):
     word = Column(String, nullable=False)
     cht = Column(String, nullable=False)
     mp3_url = Column(String, nullable=False)
+    input_file_name = Column(String, nullable=True)
     familiarity = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.datetime.now, nullable=False)
     updated_at = Column(
