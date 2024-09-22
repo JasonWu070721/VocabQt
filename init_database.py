@@ -157,6 +157,9 @@ if __name__ == "__main__":
             print(f"The word '{word}' exists in the table.")
             print(f"Data: word={word}, cht={cht}, mp3_url={mp3_url}")
 
+            if not check_mp3_exists(word):
+                save_mp3(mp3_url)
+
         else:
             response = get_dictionary_response(word)
             cht = get_tradionnal_chinese(response)
