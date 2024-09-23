@@ -14,7 +14,7 @@ class Word(Base):
     word = Column(String, nullable=False)
     cht = Column(String, nullable=False)
     mp3_url = Column(String, nullable=False)
-    input_file_name = Column(String, nullable=True)
+    input_file_id = Column(Integer, nullable=False)
     familiarity = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.datetime.now, nullable=False)
     updated_at = Column(
@@ -75,6 +75,13 @@ def delete_word(word_id):
 
 def get_all_words():
     words = session.query(Word).all()
+    word_list = [[word.id, word.word, word.cht, word.mp3_url] for word in words]
+
+    return word_list
+
+
+def get_input_file_words(input_file_id):
+    words = session.query(Word).filter_by(input_file_id=input_file_id).all()
     word_list = [[word.id, word.word, word.cht, word.mp3_url] for word in words]
 
     return word_list

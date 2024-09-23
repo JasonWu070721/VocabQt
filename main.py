@@ -23,12 +23,18 @@ from PyQt5.QtGui import QColor
 from controller.word import (
     Word,
     add_word,
-    get_all_words,
     get_random_words,
     add_word,
     update_word,
     delete_word,
     increase_familiarity,
+    get_all_words,
+    get_input_file_words,
+)
+
+
+from controller.input_file import (
+    get_all_input_file,
 )
 
 import utils.config as config
@@ -55,6 +61,7 @@ class WordTableApp(QMainWindow):
         self.timer.timeout.connect(self.play_next_word)
         self.current_word_index = 0
         self.is_looping = False
+        self.input_file_index = 0
 
         # Setup TabWidget
         self.tab_widget = QTabWidget()
@@ -64,6 +71,11 @@ class WordTableApp(QMainWindow):
         self.word_list_tab = QWidget()
         self.word_list_layout = QVBoxLayout()
         self.word_list_tab.setLayout(self.word_list_layout)
+
+        self.input_file_combo = QComboBox(self)
+
+        self.input_file_combo.currentIndexChanged.connect(self.input_file_changed)
+        self.word_list_layout.addWidget(self.input_file_combo)
 
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(
@@ -85,8 +97,6 @@ class WordTableApp(QMainWindow):
         self.table_widget.setColumnHidden(3, True)
 
         self.table_widget.cellClicked.connect(self.on_table_row_clicked)
-
-        self.load_data()
 
         # Input fields and buttons for word list tab
         self.word_input = QLineEdit(self)
@@ -119,13 +129,11 @@ class WordTableApp(QMainWindow):
         self.random_words_layout = QVBoxLayout()
         self.random_words_tab.setLayout(self.random_words_layout)
 
-        # Dropdown menu
         self.word_count_combo = QComboBox(self)
         self.word_count_combo.addItems(["10", "20", "30", "50"])
         self.word_count_combo.currentIndexChanged.connect(self.word_count_changed)
         self.random_words_layout.addWidget(self.word_count_combo)
 
-        # Checkbox
         self.auto_refill_checkbox = QCheckBox("Auto Refill", self)
         self.auto_refill_checkbox.stateChanged.connect(self.auto_refill_toggled)
         self.random_words_layout.addWidget(self.auto_refill_checkbox)
@@ -173,7 +181,15 @@ class WordTableApp(QMainWindow):
         self.tab_widget.addTab(self.word_list_tab, "Word List")
         self.tab_widget.addTab(self.random_words_tab, "Random Words")
 
+        self.load_input_file_combo()
+        self.load_data()
         self.load_random_words()
+
+    def load_input_file_combo(self):
+        all_data = get_all_input_file()
+
+        for i in range(len(all_data)):
+            self.input_file_combo.addItem(all_data[i][1], int(all_data[i][0]))
 
     def on_table_row_clicked(self, row, _):
 
@@ -210,6 +226,10 @@ class WordTableApp(QMainWindow):
         # Handle event for changing word count, e.g., reload table with selected count
         self.load_random_words()
 
+    def input_file_changed(self):
+        self.input_file_index = self.input_file_combo.currentData()
+        self.load_data(self.input_file_index)
+
     def auto_refill_toggled(self, state):
         if state == Qt.Checked:
             # Enable auto-refill functionality
@@ -232,9 +252,13 @@ class WordTableApp(QMainWindow):
         with open(config.config_file, "w") as file:
             yaml.dump(config_data, file, default_flow_style=False)
 
-    def load_data(self):
+    def load_data(self, input_file_index=1):
 
-        records = get_all_words()
+        if input_file_index == 1:
+            records = get_all_words()
+        else:
+            records = get_input_file_words(input_file_index)
+
         self.table_widget.setRowCount(len(records))
         for i, (id, word, cht, mp3_url) in enumerate(records):
 
