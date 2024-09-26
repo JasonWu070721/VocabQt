@@ -14,11 +14,13 @@ from PyQt5.QtWidgets import (
     QTabWidget,
     QCheckBox,
     QComboBox,
+    QFileDialog,
+    QProgressBar,
 )
 
 
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtCore import QUrl, QTimer, Qt
+from PyQt5.QtCore import QUrl, QTimer, Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QColor
 from controller.word import (
     Word,
@@ -35,9 +37,61 @@ from controller.word import (
 
 from controller.input_file import (
     get_all_input_file,
+    add_input_file,
+    get_all_input_file,
 )
 
 import utils.config as config
+from retrieve_dictionary import (
+    get_dictionary_response,
+    get_tradionnal_chinese,
+    get_mp3_url_html,
+    save_mp3,
+    check_mp3_exists,
+)
+
+
+class FileProcessingThread(QThread):
+    progress_changed = pyqtSignal(int)  # 自定義信號，用於更新進度條
+
+    def __init__(self, file_path):
+        super().__init__()
+        self.file_path = file_path
+
+    def run(self):
+        try:
+            with open(self.file_path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
+                total_lines = len(lines)
+
+                for index, line in enumerate(lines):
+                    file_name_split = line.split(",")
+                    if len(file_name_split) >= 2:
+
+                        word = file_name_split[0].strip()
+
+                        response = get_dictionary_response(word)
+
+                        if response != None:
+                            cht = get_tradionnal_chinese(response)
+                            print(str(word) + " ," + str(cht))
+
+                            if not check_mp3_exists(word):
+                                mp3_url = get_mp3_url_html(response)
+
+                                if mp3_url is None:
+                                    print("No MP3 URL found.")
+                                else:
+                                    save_mp3(mp3_url, word)
+
+                        else:
+                            print("No response.")
+
+                    progress = int((index + 1) / total_lines * 100)
+                    self.progress_changed.emit(progress)
+
+        except Exception as e:
+            print(f"Failed to read file: {e}")
 
 
 class WordTableApp(QMainWindow):
@@ -75,7 +129,18 @@ class WordTableApp(QMainWindow):
         self.input_file_combo = QComboBox(self)
 
         self.input_file_combo.currentIndexChanged.connect(self.input_file_changed)
-        self.word_list_layout.addWidget(self.input_file_combo)
+
+        upload_button = QPushButton("Upload File", self)
+        upload_button.clicked.connect(self.upload_file)
+
+        combo_layout = QHBoxLayout()
+        combo_layout.addWidget(self.input_file_combo)
+        combo_layout.addWidget(upload_button)
+        self.word_list_layout.addLayout(combo_layout)
+
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setGeometry(50, 50, 300, 30)
+        self.progress_bar.setAlignment(Qt.AlignCenter)
 
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(
@@ -84,6 +149,7 @@ class WordTableApp(QMainWindow):
         self.table_widget.setHorizontalHeaderLabels(
             ["ID", "Word", "CHT", "MP3 URL", "Play", "Remove"]
         )
+        self.word_list_layout.addWidget(self.progress_bar)
         self.word_list_layout.addWidget(self.table_widget)
 
         # Set the column widths
@@ -451,6 +517,33 @@ class WordTableApp(QMainWindow):
             self.current_word_index += 1
             if self.current_word_index >= len(self.random_words):
                 self.current_word_index = 0  # Loop playback
+
+    def update_progress(self, value):
+        self.progress_bar.setValue(value)
+
+    def upload_file(self):
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Upload File", "", "Text Files (*.txt);;All Files (*)"
+        )
+
+        if file_path:
+            file_name = os.path.basename(file_path)
+
+            input_files = get_all_input_file()
+
+            for input_file in input_files:
+                if len(input_file) >= 2:
+
+                    if input_file[1] == file_name:
+                        print("File already exists.")
+                        return
+
+            add_input_file(file_name)
+
+            self.thread = FileProcessingThread(file_path)
+            self.thread.progress_changed.connect(self.update_progress)
+            self.thread.start()
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import random
 import sqlite3
 import re
 
+
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
 }
@@ -66,7 +67,7 @@ def play_mp3(word):
     play(audio)
 
 
-def save_mp3(mp3_url):
+def save_mp3(mp3_url, word):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
     }
@@ -158,16 +159,17 @@ if __name__ == "__main__":
             print(f"Data: word={word}, cht={cht}, mp3_url={mp3_url}")
 
             if not check_mp3_exists(word):
-                save_mp3(mp3_url)
+                save_mp3(mp3_url, word)
 
         else:
             response = get_dictionary_response(word)
-            cht = get_tradionnal_chinese(response)
-            print(str(word) + " ," + str(cht))
 
             if response == None:
                 print("No response.")
                 continue
+
+            cht = get_tradionnal_chinese(response)
+            print(str(word) + " ," + str(cht))
 
             mp3_url = get_mp3_url_html(response)
 

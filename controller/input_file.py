@@ -28,7 +28,7 @@ session = Session()
 
 
 def add_input_file(file_name):
-    new_file_name = InputFile(word=file_name)
+    new_file_name = InputFile(file_name=file_name)
     session.add(new_file_name)
     session.commit()
     return new_file_name
