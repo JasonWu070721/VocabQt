@@ -89,9 +89,13 @@ def get_input_file_words(input_file_id):
     return word_list
 
 
-def get_random_words(random_num=10):
+def get_random_words(input_file_id, random_num=10):
     sql_query = text(
-        f"SELECT id, word, cht, mp3_url, familiarity FROM words ORDER BY RANDOM()"
+        f"""SELECT id, word, cht, mp3_url, familiarity
+        FROM words
+        WHERE input_file_id = {input_file_id}
+        ORDER BY RANDOM()
+        """
     )
     result = session.execute(sql_query)
 

@@ -54,15 +54,18 @@ from retrieve_dictionary import (
 class FileProcessingThread(QThread):
     progress_changed = pyqtSignal(int)  # 自定義信號，用於更新進度條
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, input_file_id):
         super().__init__()
         self.file_path = file_path
+        self.input_file_id = input_file_id
 
     def run(self):
         try:
             with open(self.file_path, "r", encoding="utf-8") as file:
                 lines = file.readlines()
                 total_lines = len(lines)
+                mp3_url = None
+                cht = None
 
                 for index, line in enumerate(lines):
                     file_name_split = line.split(",")
@@ -83,9 +86,12 @@ class FileProcessingThread(QThread):
                                     print("No MP3 URL found.")
                                 else:
                                     save_mp3(mp3_url, word)
-
                         else:
                             print("No response.")
+
+                        if mp3_url != None and cht != None:
+                            print(word, cht, mp3_url, int(self.input_file_id))
+                            add_word(word, cht, mp3_url, int(self.input_file_id))
 
                     progress = int((index + 1) / total_lines * 100)
                     self.progress_changed.emit(progress)
@@ -99,6 +105,7 @@ class WordTableApp(QMainWindow):
         super().__init__()
         self.random_word_count = 10
         self.auto_refill = True
+        self.input_file_index = 0
 
         self.init_ui()
         self.load_config()
@@ -115,7 +122,6 @@ class WordTableApp(QMainWindow):
         self.timer.timeout.connect(self.play_next_word)
         self.current_word_index = 0
         self.is_looping = False
-        self.input_file_index = 0
 
         # Setup TabWidget
         self.tab_widget = QTabWidget()
@@ -353,8 +359,9 @@ class WordTableApp(QMainWindow):
         word = self.word_input.text()
         cht = self.cht_input.text()
         mp3_url = self.mp3_url_input.text()
+        input_file_id = 0
 
-        add_word(word, cht, mp3_url)
+        add_word(word, cht, mp3_url, input_file_id)
 
         self.load_data()
 
@@ -384,7 +391,7 @@ class WordTableApp(QMainWindow):
 
     def load_random_words(self):
 
-        records = get_random_words(self.random_word_count)
+        records = get_random_words(self.input_file_index, self.random_word_count)
 
         self.random_table_widget.setRowCount(len(records))
         self.random_words = []
@@ -419,7 +426,9 @@ class WordTableApp(QMainWindow):
         current_row_count = self.random_table_widget.rowCount()
         if current_row_count < self.random_word_count:
 
-            records = get_random_words(self.random_word_count - current_row_count)
+            records = get_random_words(
+                self.input_file_index, self.random_word_count - current_row_count
+            )
 
             for id, word, cht, mp3_url, _ in records:
                 self.random_words.append(word)
@@ -539,9 +548,9 @@ class WordTableApp(QMainWindow):
                         print("File already exists.")
                         return
 
-            add_input_file(file_name)
+            input_file = add_input_file(file_name)
 
-            self.thread = FileProcessingThread(file_path)
+            self.thread = FileProcessingThread(file_path, input_file.id)
             self.thread.progress_changed.connect(self.update_progress)
             self.thread.start()
 
