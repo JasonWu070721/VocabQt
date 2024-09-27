@@ -87,6 +87,10 @@ def get_input_file_words(input_file_id):
     return word_list
 
 
+def check_word_exists(word):
+    return session.query(Word).filter_by(word=word).first()
+
+
 def get_random_words(input_file_id, random_num=10):
 
     if input_file_id == 1:

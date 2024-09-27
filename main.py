@@ -32,13 +32,13 @@ from controller.word import (
     increase_familiarity,
     get_all_words,
     get_input_file_words,
+    check_word_exists,
 )
 
 
 from controller.input_file import (
     get_all_input_file,
     add_input_file,
-    get_all_input_file,
 )
 
 import utils.config as config
@@ -72,6 +72,10 @@ class FileProcessingThread(QThread):
                     if len(file_name_split) >= 2:
 
                         word = file_name_split[0].strip()
+
+                        if check_word_exists(word):
+                            print(str(word) + " already exists.")
+                            continue
 
                         response = get_dictionary_response(word)
 
