@@ -52,7 +52,7 @@ from retrieve_dictionary import (
 
 
 class FileProcessingThread(QThread):
-    progress_changed = pyqtSignal(int)  # 自定義信號，用於更新進度條
+    progress_changed = pyqtSignal(int)
 
     def __init__(self, file_path, input_file_id):
         super().__init__()
@@ -79,13 +79,13 @@ class FileProcessingThread(QThread):
                             cht = get_tradionnal_chinese(response)
                             print(str(word) + " ," + str(cht))
 
-                            if not check_mp3_exists(word):
-                                mp3_url = get_mp3_url_html(response)
+                            mp3_url = get_mp3_url_html(response)
+                            if mp3_url is None:
+                                print("No MP3 URL found.")
 
-                                if mp3_url is None:
-                                    print("No MP3 URL found.")
-                                else:
-                                    save_mp3(mp3_url, word)
+                            if not check_mp3_exists(word):
+                                save_mp3(mp3_url, word)
+
                         else:
                             print("No response.")
 
@@ -532,6 +532,8 @@ class WordTableApp(QMainWindow):
 
     def upload_file(self):
 
+        input_file_exist = False
+
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Upload File", "", "Text Files (*.txt);;All Files (*)"
         )
@@ -540,17 +542,21 @@ class WordTableApp(QMainWindow):
             file_name = os.path.basename(file_path)
 
             input_files = get_all_input_file()
+            input_file_id = 0
 
             for input_file in input_files:
                 if len(input_file) >= 2:
 
                     if input_file[1] == file_name:
+                        input_file_id = input_file[0]
                         print("File already exists.")
-                        return
+                        input_file_exist = True
 
-            input_file = add_input_file(file_name)
+            if not input_file_exist:
+                input_file = add_input_file(file_name)
+                input_file_id = input_file.id
 
-            self.thread = FileProcessingThread(file_path, input_file.id)
+            self.thread = FileProcessingThread(file_path, input_file_id)
             self.thread.progress_changed.connect(self.update_progress)
             self.thread.start()
 
