@@ -51,15 +51,13 @@ def increase_familiarity(word_id):
     return True
 
 
-def update_word(word_id, new_word, new_cht, new_mp3_url, input_file_id, familiarity):
+def update_word(word_id, new_word, new_cht, new_mp3_url):
     word_to_update = session.query(Word).filter_by(id=word_id).first()
 
     if word_to_update:
         word_to_update.word = new_word
         word_to_update.cht = new_cht
         word_to_update.mp3_url = new_mp3_url
-        word_to_update.input_file_id = input_file_id
-        word_to_update.familiarity = familiarity
         word_to_update.updated_at = datetime.datetime.now()
         session.commit()
         return word_to_update

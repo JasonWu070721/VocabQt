@@ -301,6 +301,7 @@ class WordTableApp(QMainWindow):
     def input_file_changed(self):
         self.input_file_index = self.input_file_combo.currentData()
         self.load_data(self.input_file_index)
+        self.load_random_words()
 
     def auto_refill_toggled(self, state):
         if state == Qt.Checked:
@@ -361,7 +362,7 @@ class WordTableApp(QMainWindow):
         mp3_url = self.mp3_url_input.text()
         input_file_id = 0
 
-        add_word(word, cht, mp3_url, input_file_id)
+        add_word(word, cht, mp3_url, input_file_id, int(self.input_file_index))
 
         self.load_data()
 
