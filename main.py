@@ -475,29 +475,31 @@ class WordTableApp(QMainWindow):
     def update_progress(self, value):
         self.progress_bar.setValue(value)
 
-    def upload_file(self):
+    def check_input_file_exist(self, file_name):
 
-        input_file_exist = False
+        input_files = get_all_input_file()
+        input_file_id = None
+
+        for input_file in input_files:
+            if len(input_file) >= 2:
+
+                if input_file[1] == file_name:
+                    input_file_id = input_file[0]
+                    print("File already exists.")
+
+        return input_file_id
+
+    def upload_file(self):
 
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Upload File", "", "Text Files (*.txt);;All Files (*)"
         )
 
         if file_path:
-            file_name = os.path.basename(file_path)
+            file_name = os.path.basename(file_path).strip()
 
-            input_files = get_all_input_file()
-            input_file_id = 0
-
-            for input_file in input_files:
-                if len(input_file) >= 2:
-
-                    if input_file[1] == file_name:
-                        input_file_id = input_file[0]
-                        print("File already exists.")
-                        input_file_exist = True
-
-            if not input_file_exist:
+            input_file_id = self.check_input_file_exist(file_name)
+            if input_file_id is None:
                 input_file = add_input_file(file_name)
                 input_file_id = input_file.id
 

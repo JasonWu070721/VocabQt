@@ -80,15 +80,18 @@ def get_all_words():
     return word_list
 
 
+def get_word(_word):
+
+    word = session.query(Word).filter_by(word=_word).first()
+
+    return word
+
+
 def get_input_file_words(input_file_id):
     words = session.query(Word).filter_by(input_file_id=input_file_id).all()
     word_list = [[word.id, word.word, word.cht, word.mp3_url] for word in words]
 
     return word_list
-
-
-def check_word_exists(word):
-    return session.query(Word).filter_by(word=word).first()
 
 
 def get_random_words(input_file_id, random_num=10):

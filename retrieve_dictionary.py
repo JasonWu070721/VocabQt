@@ -37,7 +37,7 @@ def get_dictionary_response(word):
     return response
 
 
-def get_tradionnal_chinese(response):
+def get_translation_chinese(response):
 
     soup = BeautifulSoup(response.text, "html.parser")
 

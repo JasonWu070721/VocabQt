@@ -2,7 +2,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 from retrieve_dictionary import (
     get_dictionary_response,
-    get_tradionnal_chinese,
+    get_translation_chinese,
     get_mp3_url_html,
     save_mp3,
     check_mp3_exists,
@@ -10,8 +10,7 @@ from retrieve_dictionary import (
 
 from controller.word import (
     add_word,
-    add_word,
-    check_word_exists,
+    get_word,
 )
 
 
@@ -39,45 +38,34 @@ class FileProcessingThread(QThread):
 
                         word = file_name_split[0].strip()
 
-                        if check_word_exists(word):
-                            print(str(word) + " already exists.")
+                        word_row = get_word(word)
 
-                            if not check_mp3_exists(word):
+                        if word_row == None:
 
-                                response = get_dictionary_response(word)
-                                mp3_url = get_mp3_url_html(response)
-                                if mp3_url is None:
-                                    print("No MP3 URL found.")
-
-                                if mp3_url != None and word != None:
-                                    save_mp3(mp3_url, word)
-
-                            progress = int((index + 1) / total_lines * 100)
-                            self.progress_changed.emit(progress)
-
-                            continue
-
-                        if response == None:
                             response = get_dictionary_response(word)
 
-                        if response != None:
-                            cht = get_tradionnal_chinese(response)
-                            print(str(word) + " ," + str(cht))
+                            if response != None:
 
-                            if mp3_url == None:
+                                cht = get_translation_chinese(response)
                                 mp3_url = get_mp3_url_html(response)
-                                if mp3_url is None:
-                                    print("No MP3 URL found.")
 
-                            if not check_mp3_exists(word) and mp3_url != None:
-                                save_mp3(mp3_url, word)
+                                if mp3_url != None and cht != None:
+                                    add_word(
+                                        word, cht, mp3_url, int(self.input_file_id)
+                                    )
+                            else:
+                                print("No response.")
 
-                        else:
-                            print("No response.")
+                        if not check_mp3_exists(word):
 
-                        if mp3_url != None and cht != None:
-                            print(word, cht, mp3_url, int(self.input_file_id))
-                            add_word(word, cht, mp3_url, int(self.input_file_id))
+                            if word_row == None:
+                                word_row = get_word(word)
+
+                            if word_row != None:
+                                if word_row.word != None and word_row.word != None:
+                                    save_mp3(word_row.mp3_url, word_row.word)
+                            else:
+                                print("No mp3_url found.")
 
                     progress = int((index + 1) / total_lines * 100)
                     self.progress_changed.emit(progress)
